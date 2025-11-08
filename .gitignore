@@ -1,0 +1,7 @@
+/venv/
+__pycache__/
+*.pyc
+instance/*.db
+instance/uploads/
+.env
+.vscode/
