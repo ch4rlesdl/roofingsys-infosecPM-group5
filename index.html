@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JDGS Homeshield Roofing</title>
+
+  <style>
+    /* Palette: F1F3E0, D2DCB6, A1BC98, 778873 */
+    :root{
+      --bg:#F1F3E0;
+      --muted:#7a7f6f;        /* darker muted for contrast */
+      --muted-weak:#9aa08f;
+      --accent:#A1BC98;
+      --accent-2:#5f7a5c;     /* darker accent used for text */
+      --card-bg:#ffffff;
+      --text:#132018;         /* dark text for contrast */
+      --radius:12px;
+      --nav-height:68px;
+      --glass: rgba(255,255,255,0.65);
+      --shadow-1: 0 6px 18px rgba(19,32,24,0.08);
+      --shadow-2: 0 8px 28px rgba(19,32,24,0.12);
+      --success: #2a8f5b;
+      --danger: #b33a3a;
+      --focus: 3px solid rgba(95,122,92,0.18);
+    }
+
+    /* Basic resets */
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:var(--text); background:linear-gradient(180deg,var(--bg), #efeedc); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
+    a{color:inherit}
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      :root { --anim-speed: 0ms; }
+    }
+    :root { --anim-speed: 220ms; }
+
+    /* NAVBAR */
+    .navbar{
+      position:sticky; top:0; z-index:40; height:var(--nav-height); display:flex; align-items:center; gap:12px;
+      padding:12px 18px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); box-shadow:var(--shadow-1);
+      transition: box-shadow 200ms ease;
+    }
+    .navbar:has(.sticky-active) { box-shadow: var(--shadow-2); }
+    .logo { height:46px; width:auto; border-radius:8px; background:#fff; padding:6px; object-fit:contain; display:inline-block; }
+    .brand { font-weight:800; font-size:1.05rem; color:#ffffff; margin-left:8px; letter-spacing:0.2px; text-shadow:0 1px 0 rgba(0,0,0,0.08) }
+    .nav-actions { margin-left:auto; display:flex; align-items:center; gap:10px; }
+    .nav-actions > * { margin:0; }
+
+    /* Buttons */
+    button, .link { background:none; border:none; cursor:pointer; padding:8px 12px; border-radius:10px; font-weight:700; font-size:0.95rem; transition: transform var(--anim-speed) ease, box-shadow var(--anim-speed) ease, background-color var(--anim-speed) ease; }
+    button:focus { outline: none; box-shadow: var(--focus); }
+    button.primary { background:#ffffff; color:var(--accent-2); box-shadow: 0 4px 10px rgba(95,122,92,0.12); }
+    button.primary:hover { transform: translateY(-2px); }
+    /* Default ghost on light backgrounds */
+    button.ghost {
+      color: var(--accent-2);
+      border: 1px solid rgba(0,0,0,0.08);
+      background: transparent;
+      box-shadow:none;
+    }
+    /* Navbar ghost override (white text on dark navbar) */
+    .navbar button.ghost {
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+    }
+    .navbar button.ghost:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+
+    /* Layout container */
+    .container{padding:20px; max-width:1200px; margin:20px auto;}
+
+    /* Controls */
+    .controls{display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap}
+    .search{flex:1; min-width:200px; display:flex}
+    .search input{flex:1; padding:12px 14px; border-radius:10px 0 0 10px; border:1px solid rgba(0,0,0,0.08); background:linear-gradient(180deg,#fff,#fbfcf8)}
+    .search button{padding:10px 14px; border-radius:0 10px 10px 0; border:1px solid rgba(0,0,0,0.08); background:var(--accent-2); color:#fff}
+    select, input { font-size:0.95rem; }
+
+    /* Product grid */
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px}
+    .card{background:var(--card-bg); border-radius:var(--radius); padding:12px; box-shadow:var(--shadow-1); display:flex; flex-direction:column; min-height:260px; transform-origin:center center; transition: transform var(--anim-speed) ease, box-shadow var(--anim-speed) ease, opacity var(--anim-speed) ease; opacity:0; animation: cardIn 420ms ease forwards; }
+    @keyframes cardIn { from { transform: translateY(8px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+
+    .card:hover{ transform: translateY(-6px) scale(1.01); box-shadow:var(--shadow-2) }
+    .card img{height:140px; width:100%; object-fit:cover; border-radius:8px; background:linear-gradient(180deg,#f7f8f3,#f1f3e0)}
+    .card h4{margin:10px 0 6px 0; font-size:1.02rem}
+    .muted{color:var(--muted); font-size:0.92rem}
+    .price{margin-top:8px; font-weight:800; color:var(--accent-2)}
+    .stock{font-size:0.88rem; color:var(--muted-weak)}
+
+    /* Pager */
+    .pager{display:flex; gap:8px; justify-content:center; align-items:center; margin-top:20px}
+    .pager button { padding:8px 10px; border-radius:8px; background:transparent; border:1px solid rgba(0,0,0,0.06) }
+    .pager button.primary{ background:var(--accent-2); color:#fff; border:none; }
+
+    /* Sidebar (Cart) slide-in */
+    .sidebar{position:fixed; right:18px; top:90px; width:360px; max-height:75vh; overflow:auto; background:var(--card-bg); padding:14px; border-radius:12px; box-shadow:var(--shadow-2); transform: translateY(6px) scale(0.995); transition: transform 240ms ease, opacity 240ms ease; opacity:0; pointer-events:none}
+    .sidebar.open{ transform: translateY(0) scale(1); opacity:1; pointer-events:auto; }
+
+    /* Modal (fade + zoom) */
+    .modal{position:fixed; left:0; top:0; width:100%; height:100%; display:none; align-items:center; justify-content:center; background:rgba(7,10,7,0.45); z-index:60; animation: modalBgIn 220ms ease;}
+    @keyframes modalBgIn { from { opacity:0 } to { opacity:1 } }
+    .modal.show { display:flex; }
+    .modal .panel{width:960px; max-width:95%; max-height:90%; overflow:auto; background:var(--card-bg); border-radius:12px; padding:18px; box-shadow:var(--shadow-2); transform: scale(0.98); transition: transform var(--anim-speed) ease, opacity var(--anim-speed) ease; opacity:0 }
+    .modal.show .panel{ transform: scale(1); opacity:1; }
+
+    /* Small forms */
+    form.inline{display:flex; gap:8px; align-items:center}
+    input, select, textarea{padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.07); font-size:0.95rem}
+    textarea{min-height:72px}
+    .role-badge{padding:6px 8px; border-radius:8px; background:#fff; color:var(--accent-2); font-weight:800; font-size:0.85rem; box-shadow:0 2px 6px rgba(95,122,92,0.06)}
+
+    /* Skeleton loading */
+    .skeleton { background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.1s linear infinite; border-radius:8px; }
+    @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+    /* tiny responsive */
+    @media (max-width:900px){ .sidebar{ display:none } .modal .panel{ width:94% } .grid{ gap:12px } .card img{ height:130px } }
+    @media (max-width:520px){ .search input{ font-size:0.95rem } .brand{ font-size:0.98rem } .nav-actions{ gap:6px } .navbar { padding:10px } .container{ padding:12px } .card{ min-height:240px } }
+
+    /* accessible focus indicator for keyboard users */
+    :focus { outline: none; box-shadow: var(--focus); border-radius:10px; }
+  </style>
+</head>
+<body>
+  <div class="navbar" role="banner">
+    <img id="logoImg" class="logo" src="/itempics/logo.png" alt="JDGS logo" onerror="this.style.display='none'">
+    <div class="brand">JDGS Homeshield Roofing</div>
+
+    <div class="nav-actions" id="navActions" role="navigation" aria-label="main navigation">
+      <div id="userInfo" style="display:flex; gap:10px; align-items:center"></div>
+
+      <button class="ghost" id="btnOrders" style="display:none" title="View orders">Orders</button>
+      <button class="ghost" id="btnAdmin" style="display:none" title="Admin dashboard">Dashboard</button>
+
+      <!-- Refresh moved to navbar, left of Cart -->
+      <button class="ghost" id="btnRefresh" title="Refresh products">Refresh</button>
+
+      <button class="primary" id="btnCart" aria-haspopup="dialog" aria-expanded="false">Cart (<span id="cartCount">0</span>)</button>
+
+      <!-- Login then Register (Register to the right of Login) -->
+      <button class="ghost" id="btnLogin" title="Login to your account">Login</button>
+      <button class="ghost" id="btnRegister" title="Create a customer account">Register</button>
+    </div>
+  </div>
+
+  <main class="container" role="main">
+    <div class="controls" role="region" aria-label="search and controls">
+      <div class="search" role="search">
+        <input id="q" placeholder="Search products (name, description or SKU e.g. SHINGLE-01)" aria-label="Search products">
+        <button id="btnSearch" aria-label="Search">Search</button>
+      </div>
+      <select id="filterActive" aria-label="Filter products">
+        <option value="all">All</option>
+        <option value="active">Active only</option>
+      </select>
+      <select id="perPage" aria-label="Products per page">
+        <option>6</option><option>9</option><option>12</option>
+      </select>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+        <!-- Removed duplicate controls from here; kept minimal -->
+      </div>
+    </div>
+
+    <div id="products" class="grid" aria-live="polite" aria-busy="false"></div>
+
+    <div class="pager" id="pager" role="navigation" aria-label="Pagination"></div>
+  </main>
+
+  <!-- Cart sidebar -->
+  <aside class="sidebar" id="cartSidebar" aria-hidden="true">
+    <h3 style="margin:0 0 8px 0">Shopping Cart</h3>
+    <div id="cartItems" aria-live="polite"></div>
+    <div style="margin-top:12px; display:flex; gap:8px">
+      <button id="btnCheckout" class="primary">Checkout</button>
+      <button id="btnCloseCart" class="ghost">Close</button>
+    </div>
+    <hr style="border:none; border-top:1px solid #eee; margin:12px 0">
+    <h4 style="margin:6px 0">Order History</h4>
+    <div id="ordersList" style="font-size:0.95rem"></div>
+    <hr style="border:none; border-top:1px solid #eee; margin:12px 0">
+    <h4 style="margin:6px 0">Inventory Audit (full)</h4>
+    <div id="auditsList" style="font-size:0.9rem"></div>
+  </aside>
+
+  <!-- Modal (product details, login/register, admin forms) -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="panel" id="modalPanel" role="document"></div>
+  </div>
+
+<script>
+/* Minimal SPA logic. Keeps tokens in localStorage under 'roof_token' */
+const API = "/api";
+let state = { page:1, per_page:9, q:"", user:null, cartCount:0, productsTotal:0 };
+const el = id=>document.getElementById(id);
+
+function apiFetch(path, opts={}){
+  opts.headers = opts.headers || {};
+  const token = localStorage.getItem('roof_token');
+  if(token) opts.headers['Authorization'] = 'Bearer ' + token;
+  return fetch(API + path, opts).then(async r=>{
+    if(!r.ok){
+      const j = await r.json().catch(()=>({detail:'Bad response'}));
+      throw j;
+    }
+    return r.json().catch(()=>({}));
+  });
+}
+
+/* --- UI helpers --- */
+function showModal(html) {
+  el('modalPanel').innerHTML = html;
+  el('modal').classList.add('show');
+  el('modal').style.display='flex';
+  el('modal').setAttribute('aria-hidden','false');
+  el('modalPanel').scrollTop = 0;
+}
+function closeModal() {
+  el('modal').classList.remove('show');
+  el('modal').style.display='none';
+  el('modal').setAttribute('aria-hidden','true');
+  el('modalPanel').innerHTML='';
+}
+el('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') closeModal(); });
+
+/* --- Authentication --- */
+function renderUserInfo(){
+  const u = state.user;
+  const ui = el('userInfo');
+  ui.innerHTML = '';
+  if(u){
+    ui.innerHTML = `<div class="role-badge" title="Role">${u.role}</div><div style="color:#fff; font-weight:700">${u.display_name || u.username}</div><button class="ghost" id="btnLogout" title="Logout">Logout</button>`;
+    el('btnLogin').style.display='none';
+    el('btnRegister').style.display='none';
+    el('btnCart').style.display='inline-block';
+    if(u.role === 'ADMIN' || u.role === 'INVENTORY') el('btnAdmin').style.display='inline-block'; else el('btnAdmin').style.display='none';
+    if(u.role === 'ADMIN' || u.role === 'SALES') el('btnOrders').style.display='inline-block'; else el('btnOrders').style.display='none';
+    el('btnLogout').addEventListener('click', ()=>{ localStorage.removeItem('roof_token'); state.user=null; renderUserInfo(); loadCart(); });
+  } else {
+    el('btnLogin').style.display='inline-block';
+    el('btnRegister').style.display='inline-block';
+    el('btnAdmin').style.display='none';
+    el('btnOrders').style.display='none';
+    el('btnCart').style.display='inline-block';
+    ui.innerHTML = '';
+  }
+}
+
+/* --- Login & Register modals --- */
+function openLogin(){
+  showModal(`
+    <h3>Login</h3>
+    <form id="formLogin" class="inline" onsubmit="return false;">
+      <input id="liUser" placeholder="username" required aria-label="username">
+      <input id="liPass" placeholder="password" type="password" required aria-label="password">
+      <button class="primary" id="doLogin">Login</button>
+    </form>
+    <div style="margin-top:8px" class="muted">Please enter your credentials.</div>
+  `);
+  el('doLogin').onclick = async ()=>{
+    try{
+      const user = el('liUser').value.trim();
+      const pass = el('liPass').value;
+      const fd = new FormData();
+      fd.append('username', user); fd.append('password', pass);
+      const res = await fetch(API + '/login',{method:'POST', body:fd});
+      if(!res.ok) { const j=await res.json().catch(()=>({})); throw j; }
+      const data = await res.json();
+      localStorage.setItem('roof_token', data.access_token);
+      await whoami();
+      closeModal();
+      loadProducts();
+      loadCart();
+    }catch(err){
+      alert(err.detail || JSON.stringify(err));
+    }
+  };
+}
+
+function openRegister(){
+  showModal(`
+    <h3>Register (Customers only)</h3>
+    <form id="formReg" onsubmit="return false;">
+
+      <div style="display:flex; gap:8px;">
+        <input id="rgUser" placeholder="username" required aria-label="username">
+        <input id="rgEmail" placeholder="email" aria-label="email">
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <input id="rgDisplay" placeholder="display name" aria-label="display name">
+        <input id="rgPass" placeholder="password" type="password" required aria-label="password">
+      </div>
+
+      <!-- Password requirements text (independent, below the row) -->
+      <div style="font-size:0.85rem; color:#b33a3a; margin-top:4px;">
+        Password must be at least 8 characters, include 1 uppercase, 1 number, and 1 special character.
+      </div>
+
+      <div style="margin-top:8px">
+        <button class="primary" id="doReg">Create account</button>
+      </div>
+    </form>
+  `);
+
+  el('doReg').onclick = async ()=>{
+    try{
+      const fd = new FormData();
+      fd.append('username', el('rgUser').value.trim());
+      fd.append('password', el('rgPass').value);
+      fd.append('display_name', el('rgDisplay').value.trim());
+      fd.append('email', el('rgEmail').value.trim());
+      const res = await fetch(API + '/register', { method:'POST', body:fd });
+      if(!res.ok){ const j=await res.json().catch(()=>({})); throw j; }
+      alert('Registered. Please login.');
+      closeModal();
+    }catch(err){ alert(err.detail || JSON.stringify(err)); }
+  };
+}
+
+/* --- Products --- */
+async function loadProducts(page = 1){
+  state.page = page;
+  const per = parseInt(el('perPage').value) || state.per_page;
+  state.per_page = per;
+  const q = el('q').value.trim();
+
+  // show skeletons while loading
+  const productsEl = el('products');
+  productsEl.setAttribute('aria-busy','true');
+  productsEl.innerHTML = '';
+  for(let i=0;i<Math.min(8, per);i++){
+    productsEl.insertAdjacentHTML('beforeend', `<div class="card"><div class="skeleton" style="height:140px; width:100%;"></div><div style="height:14px; width:70%; margin:12px 0" class="skeleton"></div><div style="height:10px; width:50%" class="skeleton"></div></div>`);
+  }
+
+  try{
+    const r = await apiFetch(`/products?q=${encodeURIComponent(q)}&page=${page}&per_page=${per}`);
+    state.productsTotal = r.total || 0;
+    const container = el('products');
+    container.innerHTML = '';
+    r.items.forEach(p=>{
+      if(el('filterActive').value === 'active' && !p.active) return;
+      const img = p.image ? `/itempics/${p.image}` : '/itempics/logo.png';
+      const canDelete = state.user && (state.user.role==='ADMIN' || state.user.role==='INVENTORY');
+      container.insertAdjacentHTML('beforeend', `
+        <div class="card" data-id="${p.id}">
+          <img src="${img}" alt="${p.name}" onerror="this.src='/itempics/logo.png'">
+          <h4>${p.name}</h4>
+          <div class="muted">${p.sku} • ${p.description || ''}</div>
+          <div class="price">₱${Number(p.price).toFixed(2)}</div>
+          <div class="stock">Stock: ${p.quantity}</div>
+          <div style="margin-top:auto; display:flex; gap:8px; margin-top:10px">
+            <button class="primary" onclick="viewProduct('${p.id}')">View</button>
+            <button class="ghost" onclick="quickAdd('${p.id}')">Add</button>
+            ${ canDelete ? `<button class="ghost" onclick="confirmDeleteProduct('${p.id}')">Delete</button>` : '' }
+          </div>
+        </div>
+      `);
+    });
+    renderPager();
+  }catch(e){
+    el('products').innerHTML = '<div class="muted">Unable to load products.</div>';
+  } finally {
+    el('products').setAttribute('aria-busy','false');
+  }
+}
+
+function renderPager(){
+  const total = state.productsTotal;
+  const per = state.per_page;
+  const pages = Math.max(1, Math.ceil(total/per));
+  const pager = el('pager');
+  pager.innerHTML = '';
+  for(let i=1;i<=pages;i++){
+    pager.insertAdjacentHTML('beforeend', `<button class="${i===state.page?'primary':'ghost'}" onclick="loadProducts(${i})">${i}</button>`);
+  }
+}
+
+/* Confirm then call API to hard-delete product */
+async function confirmDeleteProduct(productId){
+  if(!confirm("Permanently delete this product? This cannot be undone.")) return;
+  try{
+    const token = localStorage.getItem("roof_token");
+    const headers = {};
+    if(token) headers["Authorization"] = "Bearer " + token;
+    const res = await fetch(API + `/products/${productId}`, { method: "DELETE", headers });
+    if(res.status === 204){
+      alert("Product deleted.");
+      loadProducts(state.page);
+      if(document.getElementById('adminProducts')) {
+        openAdminDashboard();
+      }
+      return;
+    }
+    const body = await res.json().catch(()=>({detail: res.statusText}));
+    alert("Failed to delete: " + (body.detail || JSON.stringify(body)));
+  }catch(err){
+    console.error("Delete error:", err);
+    alert("Network error while deleting product.");
+  }
+}
+
+/* View product details & reviews */
+async function viewProduct(id){
+  try{
+    const resp = await apiFetch(`/products`);
+    const prod = resp.items.find(p=>p.id===id) || (resp.items[0]||null);
+    if(!prod){ alert('Product not found'); return; }
+    const revs = await apiFetch(`/reviews/${id}`);
+    const avg = revs.reviews.length ? (revs.reviews.reduce((s,r)=>s+r.rating,0)/revs.reviews.length).toFixed(1) : 'N/A';
+    let reviewsHtml = '';
+    revs.reviews.forEach(r=>{
+      reviewsHtml += `<div style="padding:10px; border-radius:8px; background:#f6f6f6; margin-bottom:8px">
+        <div style="font-weight:800; color:var(--accent-2)">${r.user_display} <span class="muted" style="font-weight:600">· ${r.rating} ⭐</span></div>
+        <div style="margin-top:6px">${escapeHtml(r.text)}</div>
+        <div class="muted" style="font-size:0.8rem; margin-top:6px">${r.created_at}</div>
+        <div id="replies-${r.id}">${r.replies.map(rep=>`<div style="margin-top:6px; font-size:0.9rem"><b>${rep.by_display}</b>: ${escapeHtml(rep.text)}</div>`).join('')}</div>
+        ${ (state.user && (state.user.role==='ADMIN' || state.user.role==='SALES')) ? `<div style="margin-top:8px"><input id="reply-${r.id}" placeholder="Reply..." style="padding:8px; border-radius:8px; border:1px solid rgba(0,0,0,0.06)"><button class="ghost" onclick="replyReview('${id}','${r.id}')">Reply</button></div>` : '' }
+        ${ (state.user && state.user.role==='ADMIN') ? `<div style="margin-top:6px"><button class="ghost" onclick="deleteReview('${id}','${r.id}')">Delete</button></div>` : '' }
+      </div>`;
+    });
+
+    showModal(`
+      <div style="display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap">
+        <div style="flex:1; min-width:260px">
+          <img src="${prod.image?'/itempics/'+prod.image:'/itempics/logo.png'}" style="width:100%; max-height:360px; object-fit:cover; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06)">
+          <h2 style="margin-top:12px">${prod.name}</h2>
+          <div class="muted">${prod.sku}</div>
+          <p style="line-height:1.45; color:var(--muted)">${prod.description || ''}</p>
+          <div style="margin-top:8px" class="muted">Avg rating: <strong style="color:var(--accent-2)">${avg}</strong> · Reviews: ${revs.reviews.length}</div>
+        </div>
+
+        <aside style="width:320px">
+          <div style="background:#fbfdf7; padding:14px; border-radius:10px; border:1px solid rgba(95,122,92,0.06)">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-2)">₱${Number(prod.price).toFixed(2)}</div>
+              <div class="muted" style="font-size:0.95rem">Stock: <strong style="color:var(--muted)">${prod.quantity}</strong></div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px">
+              <input id="addQty" type="number" value="1" min="1" style="width:80px; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06)">
+              <button class="primary" onclick="addToCart('${prod.id}')">Add to cart</button>
+            </div>
+            ${ (state.user && (state.user.role==='ADMIN' || state.user.role==='INVENTORY')) ? `<div style="margin-top:12px"><button class="ghost" onclick="openProductEditor('${prod.id}')">Edit Product</button></div>` : '' }
+          </div>
+
+          <div style="margin-top:12px">
+            <h4 style="margin:6px 0">Reviews</h4>
+            <div>${reviewsHtml || '<div class="muted">No reviews yet.</div>'}</div>
+            ${ (state.user && (state.user.role==='CUSTOMER' || state.user.role==='ADMIN')) ? `<div style="margin-top:8px"><textarea id="newReviewText" placeholder="Write a review..." rows=3 style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.06)"></textarea><div style="display:flex; gap:8px; margin-top:8px"><input id="newReviewRating" type="number" min=1 max=5 value=5 style="width:70px"><button class="primary" onclick="postReview('${prod.id}')">Post Review</button></div></div>` : '<div class="muted">Only customers may post reviews. Sales and Inventory may reply but not post.</div>' }
+          </div>
+        </aside>
+      </div>
+    `);
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+/* Quick add to cart (1 qty) */
+async function quickAdd(product_id){
+  try{
+    const token = localStorage.getItem('roof_token');
+    if(!token){ alert('Please login to add to cart'); return; }
+    const fd = new URLSearchParams();
+    fd.append('product_id', product_id);
+    fd.append('qty', 1);
+    await apiFetch('/cart/add', { method:'POST', body: fd });
+    await loadCart();
+    const btn = document.querySelector(`.card[data-id="${product_id}"] button.primary`);
+    if(btn){ btn.textContent = 'Added'; setTimeout(()=> btn.textContent = 'View', 900); }
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+async function addToCart(product_id){
+  try{
+    const qty = parseInt(el('addQty').value) || 1;
+    const fd = new URLSearchParams();
+    fd.append('product_id', product_id);
+    fd.append('qty', qty);
+    const res = await apiFetch('/cart/add', { method:'POST', body: fd });
+    await loadCart();
+    alert('Added to cart');
+    closeModal();
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+/* Post a review */
+async function postReview(product_id){
+  try{
+    const text = el('newReviewText').value || '';
+    const rating = parseInt(el('newReviewRating').value) || 5;
+    const fd = new FormData();
+    fd.append('rating', rating);
+    fd.append('text', text);
+    await apiFetch(`/reviews/${product_id}`, { method:'POST', body: fd });
+    alert('Review posted');
+    viewProduct(product_id);
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+/* Delete review (Admin) */
+async function deleteReview(product_id, review_id){
+  if(!confirm("Permanently delete this review? This cannot be undone.")) return;
+  try{
+    const token = localStorage.getItem("roof_token");
+    const headers = {};
+    if(token) headers["Authorization"] = "Bearer " + token;
+    const res = await fetch(API + `/reviews/${product_id}/${review_id}`, { method: "DELETE", headers });
+    if(res.status === 204){
+      alert("Review deleted.");
+      viewProduct(product_id);
+      return;
+    }
+    const body = await res.json().catch(()=>({detail: res.statusText}));
+    alert("Failed to delete: " + (body.detail || JSON.stringify(body)));
+  }catch(err){
+    console.error("Delete review error:", err);
+    alert("Network error while deleting review.");
+  }
+}
+
+/* Reply to review (Sales/Admin) */
+async function replyReview(product_id, review_id){
+  try{
+    const text = el(`reply-${review_id}`).value || '';
+    const fd = new FormData();
+    fd.append('review_id', review_id);
+    fd.append('text', text);
+    await apiFetch(`/reviews/${product_id}/reply`, { method:'POST', body: fd });
+    alert('Reply posted');
+    viewProduct(product_id);
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+/* --- Cart & Orders --- */
+async function loadCart(){
+  try{
+    const token = localStorage.getItem('roof_token');
+    if(!token){ el('cartCount').innerText = 0; el('cartItems').innerHTML=''; return; }
+    const cart = await apiFetch('/cart');
+    const items = cart.items || [];
+    el('cartCount').innerText = items.reduce((s,i)=>s+i.qty,0);
+    // render sidebar
+    let html = '';
+    if(items.length===0) html = '<div class="muted">Your cart is empty</div>';
+    else {
+      for(const it of items){
+        const p = await (await fetch(API + '/products')).json().then(d=>d.items.find(x=>x.id===it.product_id));
+        html += `<div style="display:flex; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid #eee">
+          <div style="flex:1"><b>${p?p.name:'(removed)'}</b><div class="muted">Qty: ${it.qty}</div></div>
+          <div><button class="ghost" onclick="removeFromCart('${it.product_id}')">Remove</button></div>
+        </div>`;
+      }
+    }
+    el('cartItems').innerHTML = html;
+  }catch(err){ console.warn(err); el('cartCount').innerText = 0; el('cartItems').innerHTML=''; }
+}
+
+/* Remove item from cart (entire line) */
+async function removeFromCart(product_id){
+  if(!confirm("Remove this item from cart?")) return;
+  try{
+    const fd = new URLSearchParams();
+    fd.append('product_id', product_id);
+    const res = await apiFetch('/cart/remove', { method:'POST', body: fd });
+    alert('Item removed from cart');
+    await loadCart();
+    loadProducts(state.page);
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+async function openCart(){
+  el('cartSidebar').classList.add('open');
+  el('cartSidebar').setAttribute('aria-hidden','false');
+  await populateOrders();
+  await populateAudits();
+}
+
+el('btnCart').addEventListener('click', ()=>{ openCart(); loadCart(); });
+
+el('btnCloseCart').addEventListener('click', ()=>{ el('cartSidebar').classList.remove('open'); el('cartSidebar').setAttribute('aria-hidden','true'); });
+
+el('btnCheckout').addEventListener('click', async ()=>{
+  try{
+    await apiFetch('/checkout', { method:'POST' });
+    alert('Checkout complete');
+    await loadCart();
+    await populateOrders();
+    loadProducts();
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+});
+
+/* Orders for current user (or all if admin/sales) */
+async function populateOrders(){
+  try{
+    const data = await apiFetch('/orders');
+    const list = el('ordersList');
+    if(!data.orders || data.orders.length===0){ list.innerHTML = '<div class="muted">No orders yet.</div>'; return; }
+    list.innerHTML = data.orders.map(o=>`<div style="padding:6px 0; border-bottom:1px dashed #eee"><b>Order ${o.id}</b><div class="muted">${o.created_at}</div><div>Items: ${o.items.map(i=>i.product_id+ ' x'+i.qty).join(', ')}</div></div>`).join('');
+  }catch(err){ el('ordersList').innerHTML = '<div class="muted">Unable to load orders.</div>'; }
+}
+
+/* Inventory audit (full) */
+async function populateAudits(){
+  try{
+    const d = await apiFetch('/dashboard/inventory');
+    const audits = d.recent_audits || [];
+    el('auditsList').innerHTML = audits.map(a=>`<div style="padding:6px 0; border-bottom:1px dashed #eee"><b>${a.note}</b><div class="muted">${a.performed_by} · ${a.created_at}</div><div>Change: ${a.change}</div></div>`).join('') || '<div class="muted">No audits</div>';
+  }catch(err){ el('auditsList').innerHTML = '<div class="muted">No audit data</div>'; }
+}
+
+/* --- Admin / Inventory product editor (single modal) --- */
+async function openProductEditor(product_id){
+  try{
+    let product = null;
+    if(product_id){
+      const resp = await apiFetch('/products');
+      product = resp.items.find(p=>p.id===product_id);
+    }
+    showModal(`
+      <h3>${product? 'Edit Product':'Create Product'}</h3>
+      <form id="prodForm" onsubmit="return false;">
+        <div style="display:flex; gap:8px; margin-bottom:8px">
+          <input id="pname" placeholder="Name" value="${product?escapeHtml(product.name):''}" required>
+          <input id="psku" placeholder="SKU" value="${product?escapeHtml(product.sku):''}" required>
+        </div>
+        <textarea id="pdesc" placeholder="Description" style="width:100%; margin-bottom:8px">${product?escapeHtml(product.description||''):''}</textarea>
+        <div style="display:flex; gap:8px; margin-bottom:8px">
+          <input id="pprice" placeholder="Price" value="${product?product.price:''}" required>
+          <input id="pqty" placeholder="Quantity" value="${product?product.quantity:0}" required>
+          <input id="pfile" type="file" accept="image/*">
+        </div>
+        <div style="display:flex; gap:8px"><button class="primary" id="saveProd">Save</button><button class="ghost" id="cancelProd">Cancel</button></div>
+      </form>
+    `);
+    el('cancelProd').addEventListener('click', closeModal);
+    el('saveProd').addEventListener('click', async ()=>{
+      try{
+        const fd = new FormData();
+        fd.append('name', el('pname').value);
+        fd.append('sku', el('psku').value);
+        fd.append('description', el('pdesc').value);
+        fd.append('price', el('pprice').value);
+        fd.append('quantity', el('pqty').value);
+        const file = el('pfile').files[0];
+        if(file) fd.append('image', file, file.name);
+        if(product){
+          await apiFetch(`/products/${product.id}`, { method:'PUT', body: fd });
+        } else {
+          await apiFetch('/products', { method:'POST', body: fd });
+        }
+        alert('Product saved');
+        closeModal();
+        loadProducts();
+      }catch(err){ alert(err.detail || JSON.stringify(err)); }
+    });
+  }catch(err){ alert(err.detail || JSON.stringify(err)); }
+}
+
+/* --- Utility & bootstrap functions --- */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function whoami(){
+  try{
+    const data = await apiFetch('/me');
+    state.user = data;
+    renderUserInfo();
+    return data;
+  }catch(err){
+    state.user = null;
+    renderUserInfo();
+    return null;
+  }
+}
+
+/* --- Event wiring --- */
+el('btnLogin').addEventListener('click', openLogin);
+el('btnRegister').addEventListener('click', openRegister);
+el('btnSearch').addEventListener('click', ()=>loadProducts(1));
+el('btnRefresh').addEventListener('click', ()=>loadProducts(state.page));
+el('perPage').addEventListener('change', ()=>loadProducts(1));
+el('filterActive').addEventListener('change', ()=>loadProducts(1));
+el('btnAdmin').addEventListener('click', ()=>{ openAdminDashboard(); });
+el('btnOrders').addEventListener('click', ()=>{ openOrdersDashboard(); });
+
+/* --- Admin dashboard: simple modal view of audits and product create button --- */
+async function openAdminDashboard(){
+  showModal(`<h3>Admin / Inventory Dashboard</h3>
+    <div style="display:flex; gap:12px;">
+      <div style="flex:1">
+        <button class="primary" id="btnCreateProd">Create Product</button>
+        <h4 style="margin-top:12px">Products</h4>
+        <div id="adminProducts"></div>
+      </div>
+      <div style="width:320px">
+        <h4>Recent Inventory Audits</h4>
+        <div id="adminAudits"></div>
+      </div>
+    </div>
+    <div style="margin-top:8px"><button class="ghost" onclick="closeModal()">Close</button></div>
+  `);
+  el('btnCreateProd').addEventListener('click', ()=>{ openProductEditor(); });
+  try{
+    const resp = await apiFetch('/products');
+    el('adminProducts').innerHTML = resp.items.map(p=>`<div style="padding:8px; border-bottom:1px solid #eee"><b>${p.name}</b><div class="muted">SKU: ${p.sku} · Stock: ${p.quantity}</div><div style="margin-top:6px"><button class="ghost" onclick="openProductEditor('${p.id}')">Edit</button> ${ (state.user && (state.user.role==='ADMIN' || state.user.role==='INVENTORY')) ? `<button class="ghost" onclick="confirmDeleteProduct('${p.id}')">Delete</button>` : '' }</div></div>`).join('');
+    const dash = await apiFetch('/dashboard/inventory');
+    el('adminAudits').innerHTML = (dash.recent_audits||[]).map(a=>`<div style="padding:6px 0"><b>${a.note}</b><div class="muted">${a.performed_by} · ${a.created_at}</div><div>Change: ${a.change}</div></div>`).join('');
+  }catch(err){ console.warn(err); }
+}
+
+/* Orders dashboard for Admin/Sales */
+async function openOrdersDashboard(){
+  showModal(`<h3>Orders (Admin/Sales)</h3><div id="ordersDash">Loading...</div><div style="margin-top:8px"><button class="ghost" onclick="closeModal()">Close</button></div>`);
+  try{
+    const d = await apiFetch('/orders');
+    el('ordersDash').innerHTML = d.orders.map(o=>`<div style="padding:8px; border-bottom:1px solid #eee"><b>${o.id}</b><div class="muted">${o.created_at}</div><div>Items: ${o.items.map(i=>i.product_id+' x'+i.qty).join(', ')}</div></div>`).join('');
+  }catch(err){ el('ordersDash').innerHTML = '<div class="muted">Unable to load orders</div>'; }
+}
+
+/* bootstrap */
+(async function init(){
+  el('perPage').value = state.per_page;
+  try{ await whoami(); }catch(e){}
+  await loadProducts(1);
+  await loadCart();
+})();
+</script>
+</body>
+</html>

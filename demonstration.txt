@@ -1,0 +1,31 @@
+!!!! OPEN DURING DEMO !!!!
+
+RBAC --
+
+admin
+AdminPass123!
+
+inventory
+InvPass123!
+
+sales
+SalesPass123!
+
+customer
+CustPass123!
+
+ADDING A PRODUCT --
+
+PVC ROOF
+
+A lightweight roof that is made of polyvinyl chloride or plastic.
+It offers excellent weather resistant, and corrosion protection.
+It is also low-maintenance which is perfect for homes and commercial use.
+
+800 PHP
+
+
+RATE LIMIT TEST QUICK COPYPASTE
+
+admin
+AdminPass123!FJBNDFIJVNJVD
