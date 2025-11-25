@@ -51,7 +51,7 @@ DB_FILE = "db.json"
 ITEMPICS_DIR = "itempics"
 SECRET_FILE = ".secret_key"
 # Sliding session inactivity window (seconds). Change as needed.
-INACTIVITY_TIMEOUT_SECONDS = 2700 # default 5 minutes
+INACTIVITY_TIMEOUT_SECONDS = 2700 # default 45 minutes = 2700s
 JWT_ALGORITHM = "HS256"
 # NOTE: JWT_EXPIRES_MINUTES kept for compatibility but sliding tokens use INACTIVITY_TIMEOUT_SECONDS
 JWT_EXPIRES_MINUTES = 60 * 24 * 7  # 7 days
